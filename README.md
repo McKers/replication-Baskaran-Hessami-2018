@@ -29,16 +29,14 @@ The notebook can be accessed by the following badges:
 
 ## References
 
-* Baskaran, T., & Hessami, Z. (2018). Does the Election of a Female Leader Clear the Way for More Women in Politics? American economic journal. Economic policy, 10(3), 95-121. doi:10.1257/pol.20170045.
-<br>
-* Calonico, S., Cattaneo, M. D., & Titiunik, R. (2014). Robust Nonparametric Confidence Intervals for Regression-Discontinuity Designs: Robust Nonparametric Confidence Intervals. Econometrica, 82(6), 2295-2326. doi:10.3982/ECTA11757. 
-<br>
-* Eisenhauer, P. (2020). Course project template, HumanCapitalAnalysis.
-<br>
-* Gehlen, A. (2019). Replication of Jason M. Lindo, Nicholas J. Sanders & Philip Oreopoulos (2010).
-<br>
-* Imbens, G., & Kalyanaraman, K. (2011). Optimal Bandwidth Choice for the Regression Discontinuity Estimator. The Review of economic studies, 79(3), 933-959. doi:10.1093/restud/rdr043. 
-<br>
-* Lee, D. S., & Lemieux, T. (2010). Regression Discontinuity Designs in Economics. Journal of Economic Literature, 48(2), 281-355. doi:10.1257/jel.48.2.281. 
+> Baskaran, T., & Hessami, Z. (2018). Does the Election of a Female Leader Clear the Way for More Women in Politics? American economic journal. Economic policy, 10(3), 95-121. doi:10.1257/pol.20170045.
 
+> Calonico, S., Cattaneo, M. D., & Titiunik, R. (2014). Robust Nonparametric Confidence Intervals for Regression-Discontinuity Designs: Robust Nonparametric Confidence Intervals. Econometrica, 82(6), 2295-2326. doi:10.3982/ECTA11757. 
 
+> Eisenhauer, P. (2020). Course project template, HumanCapitalAnalysis.
+
+> Gehlen, A. (2019). Replication of Jason M. Lindo, Nicholas J. Sanders & Philip Oreopoulos (2010).
+
+> Imbens, G., & Kalyanaraman, K. (2011). Optimal Bandwidth Choice for the Regression Discontinuity Estimator. The Review of economic studies, 79(3), 933-959. doi:10.1093/restud/rdr043. 
+
+> Lee, D. S., & Lemieux, T. (2010). Regression Discontinuity Designs in Economics. Journal of Economic Literature, 48(2), 281-355. doi:10.1257/jel.48.2.281. 
