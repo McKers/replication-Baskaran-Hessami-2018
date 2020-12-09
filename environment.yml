@@ -1,0 +1,20 @@
+name: student_project
+
+channels:
+- defaults
+- r
+
+dependencies:
+- numpy
+- pandas
+- jupyterlab
+- matplotlib
+- seaborn
+- scipy
+- statsmodels
+- rpy2
+- r-essentials
+#- pygraphviz
+- pip 
+- pip:
+  - localreg
