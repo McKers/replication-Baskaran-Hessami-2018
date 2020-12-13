@@ -146,14 +146,26 @@ def figure1_plot_extension(data1, data2, data3, data4, data5, data6):
     plt.show()
 
 
-def rdd_plot(data, sbins, bw, K, calc_points, dependant_var):
-    # input: rdd-data of bandwith
-    # df final von
+
+
+def bin_fct(data, sbins):
+    data.loc[:, "bin"] = data["margin_1"] - np.mod(data["margin_1"], sbins) + sbins / 2
+    return data
+
+
+def smooth(x, y, xgrid):
+    samples = np.random.choice(len(x), len(x), replace=True)
+    y_s = y[samples]
+    x_s = x[samples]
+    y_sm = localreg(x_s, y_s, x0=None, degree=1, kernel=triangular, width=19.08094)
+    # regularly sample it onto the grid
+    y_grid = scipy.interpolate.interp1d(x_s, y_sm, fill_value='extrapolate')(xgrid)
+    return y_grid
+
+
+def rdd_plot(data, sbins, bw, k, calc_points, dependant_var):
     temp_df = bin_fct(data, sbins)
-
     avg_rank_impr = temp_df.groupby(temp_df["bin"]).mean()[dependant_var]
-
-    # get scatter
 
     x = range(-30, 30, sbins)
     vic_marg = x - np.mod(x, sbins) + sbins / 2
@@ -170,26 +182,21 @@ def rdd_plot(data, sbins, bw, K, calc_points, dependant_var):
     x2 = np.asarray(df_pos["margin_1"])
 
     x_sm1 = x1[0::calc_points]
-    # x_sm1=x1
     x_sm2 = x2[0::calc_points]
-    # x_sm2=x2
+
     reg_1 = localreg(x1, y1, x0=x_sm1, degree=1, kernel=triangular, width=bw)
     reg_2 = localreg(x2, y2, x0=x_sm2, degree=1, kernel=triangular, width=bw)
 
-    # df_res=pd.DataFrame([x1,x2],[y1,y2],[reg_1,reg_2],columns=['margin_1', 'gewinn_norm', 'prediction'])
-    #       h:10.55162        b:16.25238
     xgrid1 = np.linspace(-30, 0, 50)
     xgrid2 = np.linspace(0, 30, 50)
 
-    smooths1 = np.stack([smooth(x1, y1, xgrid1) for k in range(K)]).T
-    smooths2 = np.stack([smooth(x2, y2, xgrid2) for k in range(K)]).T
+    smooths1 = np.stack([smooth(x1, y1, xgrid1) for i in range(k)]).T
+    smooths2 = np.stack([smooth(x2, y2, xgrid2) for i in range(k)]).T
 
     mean_neg = np.nanmean(smooths1, axis=1)
-    stderr_neg = scipy.stats.sem(smooths1, axis=1)
     stderr_neg = np.nanstd(smooths1, axis=1, ddof=0)
 
     mean_pos = np.nanmean(smooths2, axis=1)
-    stderr_pos = scipy.stats.sem(smooths2, axis=1)
     stderr_pos = np.nanstd(smooths2, axis=1, ddof=0)
 
     fig, (ax0) = plt.subplots(1, 1, figsize=(12, 8), tight_layout=True)
@@ -205,21 +212,5 @@ def rdd_plot(data, sbins, bw, K, calc_points, dependant_var):
     ax0.plot(x_sm2, reg_2)
     plt.xlabel("% Margin of Victory")
     plt.ylabel("Average Rank Improvment")
-    # plt.title("Figure 2. Rank Improvement of Female Candidates")
     ax0.axis([-30, 30, -6, 6])
     plt.show()
-
-
-def bin_fct(data, Sbins):
-    data.loc[:, "bin"] = data["margin_1"] - np.mod(data["margin_1"], Sbins) + Sbins / 2
-    return data
-
-
-def smooth(x, y, xgrid):
-    samples = np.random.choice(len(x), len(x), replace=True)
-    y_s = y[samples]
-    x_s = x[samples]
-    y_sm = localreg(x_s, y_s, x0=None, degree=1, kernel=triangular, width=19.08094)
-    # regularly sample it onto the grid
-    y_grid = scipy.interpolate.interp1d(x_s, y_sm, fill_value='extrapolate')(xgrid)
-    return y_grid

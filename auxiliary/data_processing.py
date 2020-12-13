@@ -14,6 +14,7 @@ from auxiliary.data_processing import *
 from auxiliary.functions import *
 from auxiliary.plots import *
 
+
 def t_test_prepare_cha(data):
     table_f = data[data["geschl_first_placed"] == "f"].drop(columns=data.columns[range(0, 12)])
     table_m = data[data["geschl_first_placed"] == "m"].drop(columns=data.columns[range(0, 12)])
@@ -47,6 +48,7 @@ def dictionary_table1():
            'housewifehusband': "Housewife/-husband"}
     return dic
 
+
 def t_test_prepare_rank(data):
     table_f = data[data["female"] == 1].drop(
         columns=['gkz', 'jahr', 'gkz_jahr', 'rdd_sample', 'female', 'elected', 'gewinn', 'gewinn_dummy', 'joint_party',
@@ -75,6 +77,7 @@ def t_test_prepare_rank(data):
     table_m = table_m.rename(
         columns={'gewinn_norm': 'Rank improvement (normalized)', 'listenplatz_norm': 'Initial list rank (normalized)'})
     return table_f, table_m
+
 
 def t_test_prepare_party(data):
     table_f = data[data["geschl_first_placed"] == "f"].drop(
@@ -105,7 +108,7 @@ def prepare_ext(data):
     return data_temp
 
 
-def prepare_TableA5(data):
+def prepare_table_a5(data):
     # data input has to be rdd_sample for female candidates
 
     x = data[['gkz', 'gkz_jahr', 'gewinn_norm', 'margin_1', 'inter_1', 'margin_2', 'inter_2', 'female_mayor',
@@ -115,13 +118,14 @@ def prepare_TableA5(data):
 
     x_drop = x.dropna()
 
-    Y = x_drop['gewinn_norm']
-    X = x_drop[['log_bevoelkerung', 'log_flaeche', 'log_debt_pc', 'log_tottaxrev_pc', 'log_gemeinde_beschaef_pc',
-                'log_female_sh_gem_besch', 'log_tot_beschaeft_pc', 'log_female_share_totbesch', 'log_prod_share_tot',
-                'log_female_share_prod']]
-    X = sm_api.add_constant(X)
+    y_ols = x_drop['gewinn_norm']
+    x_ols = x_drop[['log_bevoelkerung', 'log_flaeche', 'log_debt_pc', 'log_tottaxrev_pc', 'log_gemeinde_beschaef_pc',
+                    'log_female_sh_gem_besch', 'log_tot_beschaeft_pc', 'log_female_share_totbesch',
+                    'log_prod_share_tot',
+                    'log_female_share_prod']]
+    x_ols = sm_api.add_constant(x_ols)
 
-    model = sm_api.OLS(Y, X, missing='drop')
+    model = sm_api.OLS(y_ols, x_ols, missing='drop')
     # results = model.fit(cov_type='cluster', cov_kwds={'groups': x["gkz"]})
 
     results = model.fit()
