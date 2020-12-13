@@ -1,21 +1,37 @@
-import pandas as pd
-import numpy as np
-import statsmodels.api as sm_api
-import statsmodels as sm
-import scipy.interpolate
+""" This module contains functions that process data such that the output in the replication notebook is produced"""
+
 import warnings
+import statsmodels.api as sm_api
+
+from localreg import *
 
 warnings.filterwarnings("ignore")
 
-from localreg import *
-from IPython.display import display_html
-from scipy import stats
-from auxiliary.data_processing import *
-from auxiliary.functions import *
-from auxiliary.plots import *
+
+def get_rdd_data(data, female=False):
+    """Selects observations for RDD analysis (i.e close margin of victory in mixed gender race).
+
+    :param (df)         data: df (originating from "main_dataset.dta")
+    :param (bool)       female: if true restricts sample to female council candidates
+    :return:            df
+    """
+    # creates sample for RDD
+
+    if female:
+        data1 = data.loc[(data["rdd_sample"] == 1) & (data["female"] == 1)].copy()
+
+        return data1
+
+    data1 = data.loc[(data["rdd_sample"] == 1)].copy()
+    return data1
 
 
 def t_test_prepare_cha(data):
+    """Prepares data for ttest() to produce output  Table A.4  (difference in municipality characteristics).
+
+    :param (df)         data: dataframe (municipality_characteristics_data.dta)
+    :return:            tuple containing two dfs as elements (first: female mayor,second: male mayor)
+    """
     table_f = data[data["geschl_first_placed"] == "f"].drop(columns=data.columns[range(0, 12)])
     table_m = data[data["geschl_first_placed"] == "m"].drop(columns=data.columns[range(0, 12)])
 
@@ -40,6 +56,10 @@ def t_test_prepare_cha(data):
 
 
 def dictionary_table1():
+    """Creates dictionary to rename variables for summary statistics table.
+
+    :return:            dic
+    """
     dic = {"gewinn_norm": "Rank improvement (normalized)", "listenplatz_norm": "Initial list rank (normalized)",
            "age": "Age", 'non_university_phd': "High school", 'university': 'University', 'phd': 'Phd',
            'architect': 'Architect', 'businessmanwoman': "Businesswoman/-man", 'engineer': "Engineer",
@@ -50,6 +70,11 @@ def dictionary_table1():
 
 
 def t_test_prepare_rank(data):
+    """Prepares data for ttest() to produce output  Table A.2 (differences in rank improvement by gender).
+
+    :param (df)         data: dataframe ("main_dataset.dta")
+    :return:            tuple containing two dfs as elements (first: female candidates,second: male candidates)
+    """
     table_f = data[data["female"] == 1].drop(
         columns=['gkz', 'jahr', 'gkz_jahr', 'rdd_sample', 'female', 'elected', 'gewinn', 'gewinn_dummy', 'joint_party',
                  'age', 'non_university_phd', 'university', 'phd',
@@ -80,6 +105,11 @@ def t_test_prepare_rank(data):
 
 
 def t_test_prepare_party(data):
+    """Prepares data for ttest() to produce output Table A.7 (difference in party affiliation of mayor candidates).
+
+    :param df           data: df with mayor election data (rdd,"mayor_election_data.dta")
+    :return:            tuple containing two dfs as elements (first/second: below/above cuttoff party affiliation)
+    """
     table_f = data[data["geschl_first_placed"] == "f"].drop(
         columns=['gkz', 'jahr', 'election_year', 'mayor_election_year', 'geschl_first_placed', 'rdd_sample',
                  'female_mayor', 'male_mayor', 'margin_1'])
@@ -94,6 +124,11 @@ def t_test_prepare_party(data):
 
 
 def prepare_ext(data):
+    """Prepares data for section 6.2.
+
+    :param df           data: df used in rdd analysis with female candidates only
+    :return:            df
+    """
     data_temp = data.drop(
         columns=["jahr", "rdd_sample", "female", "elected", "gewinn", "gewinn_dummy", "listenplatz_norm", "joint_party",
                  "age", "architect", "businessmanwoman", "engineer", "lawyer",
@@ -109,7 +144,12 @@ def prepare_ext(data):
 
 
 def prepare_table_a5(data):
-    # data input has to be rdd_sample for female candidates
+    """ Preparation for Table A.5. Regress performance of female council candidates on municipality characteristics.
+
+    :param df           data:  df used in rdd analysis with female candidates only
+    :return:            df containing predicted rank improvement based on municipality characteristics
+    """
+    #
 
     x = data[['gkz', 'gkz_jahr', 'gewinn_norm', 'margin_1', 'inter_1', 'margin_2', 'inter_2', 'female_mayor',
               'log_bevoelkerung', 'log_flaeche', 'log_debt_pc', 'log_tottaxrev_pc', 'log_gemeinde_beschaef_pc',
@@ -126,7 +166,6 @@ def prepare_table_a5(data):
     x_ols = sm_api.add_constant(x_ols)
 
     model = sm_api.OLS(y_ols, x_ols, missing='drop')
-    # results = model.fit(cov_type='cluster', cov_kwds={'groups': x["gkz"]})
 
     results = model.fit()
 
@@ -137,15 +176,3 @@ def prepare_table_a5(data):
     df_final = x_another.drop_duplicates()
 
     return df_final
-
-
-def get_rdd_data(data, female=False):
-    # creates sample for RDD
-
-    if female:
-        data1 = data.loc[(data["rdd_sample"] == 1) & (data["female"] == 1)].copy()
-
-        return data1
-
-    data1 = data.loc[(data["rdd_sample"] == 1)].copy()
-    return data1

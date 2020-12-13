@@ -1,28 +1,36 @@
-import matplotlib.pyplot as plt
+""" This module contains  utility  and table output functions for the replication notebook"""
+
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm_api
 import statsmodels as sm
-import scipy.interpolate
 import warnings
+
+from localreg import *
 
 warnings.filterwarnings("ignore")
 
-from localreg import *
-from IPython.display import display_html
-from scipy import stats
-from auxiliary.data_processing import *
-from auxiliary.functions import *
-from auxiliary.plots import *
-
 
 def ind_fct(vector):
+    """ Indicator function that returns a list of len(vector) indicating if value in vector is positive/negative.
+
+    :param (list)       vector: list containing values to check
+    :return:            list of integers (0,1)
+    """
+
     indic = [1 if abs(x) <= 1 else 0 for x in vector]
 
     return indic
 
 
 def weight(data, bw):
+    """Calculates weights for observations based on distance to cut-off point ("margin_1"=0) for regression model.
+
+    :param df           data: dataframe containing variable "margin_1"
+    :param (int)        bw: distance to cut-off
+    :return:            df containing weights as variable
+    """
+
     temp_i = data['margin_1'] / bw
     ind_i = ind_fct(temp_i)
     weight_i = (1 - abs(temp_i)) * ind_i
@@ -30,6 +38,14 @@ def weight(data, bw):
 
 
 def table1(data, dic, female=False):
+    """  This function produces summary statistics for individual council candidates  as presented in Table 1/section 6.
+
+    :param (df)         data: dataframe containing variable "margin_1"
+    :param (dic)        dic: dictionary mapping variable names to output names
+    :param (bool)       female: if True, restricts the sample to female council candidates
+    :return:            df containing summary statistics
+    """
+
     if female:
         data = data[data["female"] == 1]
 
@@ -38,7 +54,106 @@ def table1(data, dic, female=False):
     return table1_a
 
 
+def subset_by_margin(data, margin):
+    """This function restricts the dataframe to only contain observations with margin / distance to cut-off point
+    "margin_1"=0.
+
+    :param (df)         data: dataframe containing variable "margin_1"
+    :param (float)      margin: maximum distance to cut-off point
+    :return:            restricted df
+    """
+    data = data[abs(data["margin_1"]) < margin]
+
+    return data
+
+
+def se(n_1, n_2, std_1, std_2):
+    """This function calculates an estimator of the pooled standard error for two samples of unequal size.
+
+    :param (int)        n_1: size of sample 1
+    :param (int)        n_2: size of sample 2
+    :param (np.ndarray) std_1: standard deviation of sample 1
+    :param (np.ndarray) std_2: standard deviation of sample 2
+    :return:(np.float)  estimator of pooled standard error
+    """
+    error = np.sqrt((((n_1 - 1) * (std_1 ** 2) + (n_2 - 1) * (std_2 ** 2)) / (n_1 + n_2 - 2)) * (1 / n_1 + 1 / n_2))
+    return error
+
+
+def significance_level(value_to_check, string_to_print):
+    """ This function attaches ***/**/* to float if float meets conditions.
+    Designed to be used in ttest(), reg_tab and reg_tab_ext to indicate statistical significance.
+
+    :param (float)      value_to_check: value to check
+    :param (str)        string_to_print: string ***/**/* gets attached to if condition is met
+    :return:            string
+    """
+    if value_to_check <= 0.01:
+        out = str(string_to_print) + "***"
+    elif 0.01 < value_to_check <= 0.05:
+        out = str(string_to_print) + "**"
+    elif 0.05 < value_to_check <= 0.1:
+        out = str(string_to_print) + "*"
+    else:
+        out = str(string_to_print)
+
+    return out
+
+
+def ttest(data, index):
+    """Performs t-test for differences between variables for two samples.
+
+    :param tuple        data:  tuple containing two dataframes with identical variables which are to be compared
+    :param str          index: overall label for characteristics in table
+    :return:            df containing results of t-tests
+    """
+    table = pd.DataFrame(
+        {index: [], 'Treatment': [], 'Control ': [], 'Diff': [], 'Std. Error': [],
+         'Observations': []})
+    table = table.set_index([index])
+
+    col_0 = data[0].columns
+    col_1 = data[1].columns
+
+    for i in range(0, len(col_0)):
+        x_1 = data[0][col_0[i]].dropna()
+        y_1 = data[1][col_1[i]].dropna()
+        m_1 = data[0][col_0[i]].mean().round(3)
+        m_2 = data[1][col_1[i]].mean().round(3)
+        diff = (m_1 - m_2).round(3)
+        n_1 = len(data[0][col_0[i]].dropna())
+        n_2 = len(data[1][col_1[i]].dropna())
+        n = n_1 + n_2
+        std_1 = np.asarray(np.std(data[0][col_0[i]]))
+        std_2 = np.asarray(np.std(data[1][col_1[i]]))
+
+        std_error = (se(n_1, n_2, std_1, std_2)).round(3)
+        test = sm.stats.weightstats.ttest_ind(x_1, y_1, usevar='pooled')
+
+        diff_res = significance_level(test[1], diff)
+
+        output = [m_1, m_2, diff_res, std_error, n]
+
+        table.loc['' + str(col_0[i]) + ''] = output
+
+    return table
+
+
 def reg_tab(*model):
+    """ Performs weighted linear regression for various models as specified in section 4 of the replication notebook.
+        A single model (i.e. function argument) takes on the form:
+
+            model=[df,polynomial, bw, dependant variable, bandwidth-type]
+
+        df: dataframe containing all relevant data
+        polynomial (str): "quadratic" includes quadratic values of "margin_1" and "inter_1" in regression model;
+            default is "linear"
+        bw (float): specifying data to be included relative to cut-off point ("margin_1"=0)
+        dependant variable (str): name of dependant variable
+        bandwidth-type (str): method used to calculate bandwidth
+
+    :return: df containing results of regression model
+    """
     table = pd.DataFrame(
         {'Model': [], 'Female Mayor': [], 'Std.err': [], 'Bandwidth type': [], 'Bandwidth size': [], 'Polynomial': [],
          'Observations': [], 'Elections': [], 'Municipalities': [],
@@ -81,72 +196,23 @@ def reg_tab(*model):
     return table
 
 
-def display_side_by_side(*args):
-    # credit goes to stackoverflow user: https://stackoverflow.com/users/508907/ntg
-    html_str = ''
-    for df in args:
-        html_str += df.to_html()
-    display_html(html_str.replace('table', 'table style="display:inline"'), raw=True)
-
-
-def subset_by_margin(data, margin):
-    data = data[abs(data["margin_1"]) < margin]
-
-    return data
-
-
-def se(n_1, n_2, std_1, std_2):
-    error = np.sqrt((((n_1 - 1) * (std_1 ** 2) + (n_2 - 1) * (std_2 ** 2)) / (n_1 + n_2 - 2)) * (1 / n_1 + 1 / n_2))
-    return error
-
-
-def ttest(data, index):
-    table = pd.DataFrame(
-        {index: [], 'Treatment': [], 'Control ': [], 'Diff': [], 'Std. Error': [],
-         'Observations': []})
-    table = table.set_index([index])
-
-    col_0 = data[0].columns
-    col_1 = data[1].columns
-
-    for i in range(0, len(col_0)):
-        x_1 = data[0][col_0[i]].dropna()
-        y_1 = data[1][col_1[i]].dropna()
-        m_1 = data[0][col_0[i]].mean().round(3)
-        m_2 = data[1][col_1[i]].mean().round(3)
-        diff = (m_1 - m_2).round(3)
-        n_1 = len(data[0][col_0[i]].dropna())
-        n_2 = len(data[1][col_1[i]].dropna())
-        n = n_1 + n_2
-        std_1 = np.asarray(np.std(data[0][col_0[i]]))
-        std_2 = np.asarray(np.std(data[1][col_1[i]]))
-
-        std_error = (se(n_1, n_2, std_1, std_2)).round(3)
-        test = sm.stats.weightstats.ttest_ind(x_1, y_1, usevar='pooled')
-
-        diff_res = significance_level(test[1], diff)
-
-        output = [m_1, m_2, diff_res, std_error, n]
-
-        table.loc['' + str(col_0[i]) + ''] = output
-
-    return table
-
-
-def significance_level(value_to_check, string_to_print):
-    if value_to_check <= 0.01:
-        out = str(string_to_print) + "***"
-    elif 0.01 < value_to_check <= 0.05:
-        out = str(string_to_print) + "**"
-    elif 0.05 < value_to_check <= 0.1:
-        out = str(string_to_print) + "*"
-    else:
-        out = str(string_to_print)
-
-    return out
-
-
 def reg_tab_ext(*model):
+    """ Performs weighted linear regression for various models building upon the model specified in section 4,
+        while additionally including education levels of a council candidate (university degree, doctoral/PhD degree)
+        A single model (i.e. function argument) takes on the form:
+
+
+            model=[df,polynomial, bw, dependant variable, bandwidth-type]
+
+    df: dataframe containing all relevant data
+    polynomial (str): "quadratic" includes quadratic values of "margin_1" and "inter_1" in regressionmodel;
+        default is "linear"
+    bw (float): specifying data to be included relative  to  cut-off point ("margin_1"=0)
+    dependant variable (str): name of dependant variable
+    bandwidth-type (str): method used to calculate bandwidth
+
+    :return: df containing results of regression
+    """
     # pd.set_option('mode.chained_assignment', None)
     table = pd.DataFrame(
         {'Model': [], 'Female Mayor': [], 'Std.err_Female Mayor': [], 'University': [], 'Std.err_University': [],

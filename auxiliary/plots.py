@@ -1,63 +1,50 @@
-import pandas as pd
-import numpy as np
-import statsmodels.api as sm_api
-import statsmodels as sm
-import scipy.interpolate
-import warnings
+""" This module contains functions for plotting the graphs presented in the replication notebook"""
 
-warnings.filterwarnings("ignore")
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.interpolate
 
 from localreg import *
-from IPython.display import display_html
-from scipy import stats
-from .data_processing import *
-from .functions import *
-from auxiliary.plots import *
+from auxiliary.data_processing import *
 
 
-def get_rdd_data(data, female=False):
-    # creates sample for RDD
+def bin_fct(data, sbins):
+    """ Creates column which indicates the bin of each observation according to the "margin_1" variable
 
-    if female:
-        data1 = data.loc[(data["rdd_sample"] == 1) & (data["female"] == 1)].copy()
-
-        return data1
-
-    data1 = data.loc[(data["rdd_sample"] == 1)].copy()
-    return data1
-
-
-def data_fig1_a(data, ext=False):
-    rslt_1 = data[['gkz', 'jahr']].drop_duplicates()["jahr"].value_counts().sort_values()
-
-    if ext:
-        data_rdd = get_rdd_data(data, female=False)
-        rslt_2 = data_rdd[['gkz', 'jahr']].drop_duplicates()["jahr"].value_counts().sort_values()
-
-        return [rslt_1, rslt_2]
-
-    return [rslt_1]
+    :param (df)         data: df that contains "margin_1"
+    :param (int)        sbins: length of bin
+    :return(df):        df with bin indication as variable
+    """
+    data.loc[:, "bin"] = data["margin_1"] - np.mod(data["margin_1"], sbins) + sbins / 2
+    return data
 
 
-def data_fig1_b(data, ext=False):
-    data_0 = data.groupby(data["jahr"]).size()
+def smooth(x, y, xgrid):
+    """ Approximates the linear relationship between x and y by a random subsample
 
-    if ext:
-        temp_1 = data.loc[data["female"] == 1]
-        data_1 = temp_1.groupby(temp_1["jahr"]).size()
+    :param (np.array)   x: x-axis data points
+    :param np.array     y: y-axis data points
+    :param np.array     xgrid: interpolation points
+    :return np.array: approximate/smoothed y-values
+    """
+    samples = np.random.choice(len(x), len(x), replace=True)
+    y_s = y[samples]
+    x_s = x[samples]
+    y_sm = localreg(x_s, y_s, x0=None, degree=1, kernel=triangular, width=19.08094)
+    y_grid = scipy.interpolate.interp1d(x_s, y_sm, fill_value='extrapolate')(xgrid)
 
-        temp_2 = get_rdd_data(data, female=False)
-        data_2 = temp_2.groupby(temp_2["jahr"]).size()
-
-        temp_3 = get_rdd_data(data, female=True)
-        data_3 = temp_3.groupby(temp_3["jahr"]).size()
-
-        return [data_0, data_1, data_2, data_3]
-    return [data_0]
+    return y_grid
 
 
 def autolabel(rects, ax):
-    """Attach a text label above each bar in *rects*, displaying its height."""
+    """Attach a text label above each bar in *rects*, displaying its height. Intended to be called by (e.g)
+        figure1_plot().
+
+    :param rects:       matplotlib ax.bar
+    :param ax:          matplotlib figure (ax)
+    :return:            counts displayed on bar
+    """
     for rect in rects:
         height = rect.get_height()
         ax.annotate('{}'.format(height),
@@ -67,7 +54,54 @@ def autolabel(rects, ax):
                     ha='center', va='bottom')
 
 
+def data_fig1_a(data, ext=False):
+    """ Process data for plotting figure 1a.
+
+    :param (df)         data: main dataframe of analysis
+    :param (bool)       ext: if True, returns data for extension 6.1
+    :return:            list(s) of int
+    """
+    rslt_1 = list(data[['gkz', 'jahr']].drop_duplicates()["jahr"].value_counts().sort_values())
+
+    if ext:
+        data_rdd = get_rdd_data(data, female=False)
+        rslt_2 = list(data_rdd[['gkz', 'jahr']].drop_duplicates()["jahr"].value_counts().sort_values())
+
+        return rslt_1, rslt_2
+
+    return rslt_1
+
+
+def data_fig1_b(data, ext=False):
+    """Process data for plotting figure 1b.
+
+    :param (df)         data: main dataframe of analysis
+    :param (bool)       ext: if True, returns data for extension 6.1
+    :return:            list(s) of int
+    """
+    data_0 = list(data.groupby(data["jahr"]).size())
+
+    if ext:
+        temp_1 = data.loc[data["female"] == 1]
+        data_1 = list(temp_1.groupby(temp_1["jahr"]).size())
+
+        temp_2 = get_rdd_data(data, female=False)
+        data_2 = list(temp_2.groupby(temp_2["jahr"]).size())
+
+        temp_3 = get_rdd_data(data, female=True)
+        data_3 = list(temp_3.groupby(temp_3["jahr"]).size())
+
+        return data_0, data_1, data_2, data_3
+    return data_0
+
+
 def figure1_plot(data1, data2):
+    """Plots the histogram for figure 1.
+
+    :param              data1: list obtained by data_fig1_a()
+    :param              data2: list obtained by data_fig1_b()
+    :return:            histogram/figure1
+    """
     labels = [2001, 2006, 2011, 2016]
 
     x = np.arange(len(labels))  # the label locations
@@ -101,6 +135,16 @@ def figure1_plot(data1, data2):
 
 
 def figure1_plot_extension(data1, data2, data3, data4, data5, data6):
+    """Plots the histogram for the extension in section 6.1.
+
+    :param (tuple)      data1: (list[0] obtained by data_fig1_a(),"label")
+    :param (tuple)      data2: (list[1] obtained by data_fig1_a(),"label")
+    :param (tuple)      data3: (list[0] obtained by data_fig1_b(),"label")
+    :param (tuple)      data4: (list[1] obtained by data_fig1_b(),"label")
+    :param (tuple)      data5: (list[2] obtained by data_fig1_b(),"label")
+    :param (tuple)      data6: (list[3] obtained by data_fig1_b(),"label")
+    :return:            histogram/figure  in section 6.1
+    """
     labels = [2001, 2006, 2011, 2016]
 
     x = np.arange(len(labels))  # the label locations
@@ -146,24 +190,17 @@ def figure1_plot_extension(data1, data2, data3, data4, data5, data6):
     plt.show()
 
 
-
-
-def bin_fct(data, sbins):
-    data.loc[:, "bin"] = data["margin_1"] - np.mod(data["margin_1"], sbins) + sbins / 2
-    return data
-
-
-def smooth(x, y, xgrid):
-    samples = np.random.choice(len(x), len(x), replace=True)
-    y_s = y[samples]
-    x_s = x[samples]
-    y_sm = localreg(x_s, y_s, x0=None, degree=1, kernel=triangular, width=19.08094)
-    # regularly sample it onto the grid
-    y_grid = scipy.interpolate.interp1d(x_s, y_sm, fill_value='extrapolate')(xgrid)
-    return y_grid
-
-
 def rdd_plot(data, sbins, bw, k, calc_points, dependant_var):
+    """Plots smoothed local regression with bootstrapped CIs on both sides of "margin_1".
+
+    :param (df)         data: df that contains "margin_1" and parameter dependant_var
+    :param (int)        sbins: length of bin
+    :param (int)        bw: bandwidth for local regression
+    :param (int)        k: iterations of resampling by bootstrapping
+    :param (int)        calc_points: points where to calculate smoothed value
+    :param (str)        dependant_var: name of dependant variable in df
+    :return:            plot
+    """
     temp_df = bin_fct(data, sbins)
     avg_rank_impr = temp_df.groupby(temp_df["bin"]).mean()[dependant_var]
 
