@@ -1,9 +1,10 @@
 language: python
 
-python:
-  - 3.6
-
-bundler_args: --retry 3
+matrix:
+  # This will launch a separate build for each Python version you add
+  # Feel free to add extra environment variables as needed
+  include:
+     - python: 3.6
 
 before_install:
   # Install the latest version of Miniconda
@@ -11,7 +12,7 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda/bin:$PATH
- # - conda update --yes conda  # Update CONDA without command line prompt
+  - conda update --yes conda  # Update CONDA without command line prompt
 
 install:
   - sudo apt-get update
