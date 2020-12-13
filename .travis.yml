@@ -5,10 +5,18 @@ python:
 
 bundler_args: --retry 3
 
+before_install:
+  # Install the latest version of Miniconda
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda  # Update CONDA without command line prompt
+
 install:
   - sudo apt-get update
-  - ./utils/travis_miniconda.sh
-  - PATH="$HOME/miniconda/bin:$PATH"
+  #- ./utils/travis_miniconda.sh
+  #- PATH="$HOME/miniconda/bin:$PATH"
   - conda env create -f environment.yml
   - source activate student_project
 
