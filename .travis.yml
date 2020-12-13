@@ -6,11 +6,9 @@ python:
 bundler_args: --retry 3
 
 install:
- # - sudo apt-get install -y r-base
- # - sudo apt-get install -y r-cran-foreign
   - sudo apt-get update
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - source "$HOME/miniconda/etc/profile.d/conda.sh"
+  - ./utils/travis_miniconda.sh
+  - PATH="$HOME/miniconda/bin:$PATH"
   - conda env create -f environment.yml
   - source activate student_project
 
