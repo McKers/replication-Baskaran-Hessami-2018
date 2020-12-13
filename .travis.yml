@@ -9,8 +9,8 @@ install:
  # - sudo apt-get install -y r-base
  # - sudo apt-get install -y r-cran-foreign
   - sudo apt-get update
-  - ./utils/travis_miniconda.sh
-  - PATH="$HOME/miniconda/bin:$PATH"
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - source "$HOME/miniconda/etc/profile.d/conda.sh"
   - conda env create -f environment.yml
   - source activate student_project
 
