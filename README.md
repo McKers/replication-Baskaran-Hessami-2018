@@ -24,7 +24,7 @@ The notebook can be accessed by the following badges:
       width="109" height="20">
 </a>
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/HumanCapitalAnalysis/microeconometrics-course-project-McKers/master?filepath=Replication.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/McKers/replication-Baskaran-Hessami-2018/98f02ed44242789a9f27309f36cb042bc750cb2c)
 
 
 ## References
