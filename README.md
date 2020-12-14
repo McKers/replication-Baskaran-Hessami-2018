@@ -12,7 +12,7 @@ The original paper and its corresponding data are available at: https://www.aeaw
 
 Link to Travis CI for my project: 
 
-[![Build Status](https://travis-ci.org/HumanCapitalAnalysis/microeconometrics-course-project-McKers.svg?branch=master)](https://travis-ci.org/HumanCapitalAnalysis/microeconometrics-course-project-McKers)
+[![Build Status](https://travis-ci.org/McKers/replication-Baskaran-Hessami-2018.svg?branch=main)](https://travis-ci.org/McKers/replication-Baskaran-Hessami-2018.svg?branch=main)
 
 
 The notebook can be accessed by the following badges:
