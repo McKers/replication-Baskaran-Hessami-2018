@@ -1,4 +1,4 @@
-name: student_project
+name: test
 
 channels:
 - defaults
@@ -18,3 +18,4 @@ dependencies:
 - pip 
 - pip:
   - localreg
+  - nbconvert
