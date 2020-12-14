@@ -17,7 +17,7 @@ Link to Travis CI for my project:
 
 The notebook can be accessed by the following badges:
 
-<a href="https://nbviewer.jupyter.org/github/HumanCapitalAnalysis/microeconometrics-course-project-McKers/blob/master/Replication.ipynb"
+<a href="https://nbviewer.jupyter.org/github/McKers/replication-Baskaran-Hessami-2018/blob/main/Replication.ipynb"
    target="_parent">
    <img align="center"
   src="https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.png"
