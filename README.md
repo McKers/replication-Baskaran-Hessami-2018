@@ -12,7 +12,7 @@ The original paper and its corresponding data are available at: https://www.aeaw
 
 Link to Travis CI for my project: 
 
-[![Build Status](https://travis-ci.org/McKers/replication-Baskaran-Hessami-2018.svg?branch=main)](https://travis-ci.org/McKers/replication-Baskaran-Hessami-2018.svg?branch=main)
+[![Build Status](https://travis-ci.org/McKers/replication-Baskaran-Hessami-2018)](https://travis-ci.org/McKers/replication-Baskaran-Hessami-2018)
 
 
 The notebook can be accessed by the following badges:
